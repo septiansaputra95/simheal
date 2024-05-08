@@ -36,7 +36,6 @@ class PermohonanController extends Controller
     public function store(Request $request)
     {
         //
-        echo "ss";
         $request->validate([
             'nama_pemohon'      => 'required',
             'hubungan'          => 'required',
@@ -47,8 +46,16 @@ class PermohonanController extends Controller
             'nomor_whatsapp'    => 'required'
         ]);
 
+        $dataDiminta = $request->data_diminta; // Simpan nilai $request->data_diminta ke dalam variabel $dataDiminta
+
         // echo $request->data_diminta[1];
         // dd($request);
+        # DETEKSI HUBUNGAN PASIEN LAIN-LAIN
+        if($request->hubungan == 'LAIN-LAIN')
+        {
+            $request->hubungan = $request->keterangan_lain;
+        }
+        # DETEKSI DATA PERMINTAAN 
 
         # GENERATE ID HEADER
         $idheader = date('Ymd').''.rand(1000,100000);
@@ -60,16 +67,19 @@ class PermohonanController extends Controller
         # HEADER
         $this->permohonanModel->simpanPermohonan($request->all(), $idheader);
 
-        for($i=0;$i<count($request->data_diminta);$i++){
-            $this->permohonanModel->simpanPermohonanDetail($idheader, $request->data_diminta[$i]);
+        // Lakukan iterasi pada $dataDiminta
+        for ($i = 0; $i < count($dataDiminta); $i++) {
+            // Periksa apakah nilai $dataDiminta[$i] adalah 'LAIN-LAIN'
+            if ($dataDiminta[$i] == 'LAIN-LAIN') {
+                // Jika ya, ganti nilai $dataDiminta[$i] dengan nilai dari $request->keterangan_data_lain
+                $dataDiminta[$i] = $request->keterangan_data_lain;
+            }
+
+            // Panggil method simpanPermohonanDetail dengan menggunakan nilai dari $dataDiminta[$i]
+            $this->permohonanModel->simpanPermohonanDetail($idheader, $dataDiminta[$i]);
         }
-        
-        die();
 
-
-
-
-        
+        return view('permohonan/formselesai');    
     }
 
     /**
